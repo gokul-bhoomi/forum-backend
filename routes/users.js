@@ -59,7 +59,7 @@ Router.post(
         }
       );
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
       res.status(500).send('Server Error');
     }
   }
@@ -74,14 +74,12 @@ Router.put('/', auth, async (req, res) => {
 
     if (!user) return res.status(404).json({ msg: 'User not found' });
     if (like) {
-      console.log(typeof like);
       user = await User.findByIdAndUpdate(
         req.user.id,
         { $push: { liked: like } },
         { new: true }
       );
     } else {
-      console.log('like');
       user = await User.findByIdAndUpdate(
         req.user.id,
         { $pull: { liked: dislike } },

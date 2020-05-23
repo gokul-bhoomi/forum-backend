@@ -32,6 +32,10 @@ const ForumSchema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  datee: {
+    type: String,
+    default: new Date(),
+  },
 });
 ForumSchema.index({ '$**': 'text' });
 

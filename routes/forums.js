@@ -53,12 +53,20 @@ Router.post('/post', async (req, res) => {
     return res.status(500).send('Server Error');
   }
 });
+Router.get('/myposts', auth, async (req, res) => {
+  try {
+    const forums = await Forum.find({ user: req.user.id }).sort({ date: -1 });
+    return res.json(forums);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send('Server Error');
+  }
+});
 // @route     PUT api/contacts/:id
 // @desc      Update contact
 // @access    Private
 Router.put('/:id', auth, async (req, res) => {
   // Build comments object
-  console.log('likes');
 
   try {
     let forum = await Forum.findById(req.params.id);
@@ -82,14 +90,32 @@ Router.put('/:id', auth, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+Router.put('/post/:id', auth, async (req, res) => {
+  // Build comments o  bject
+
+  try {
+    let forum = await Forum.findById(req.params.id);
+
+    if (!forum) return res.status(404).json({ msg: 'Forum not found' });
+
+    forum = await Forum.findByIdAndUpdate(req.params.id, {
+      body: req.body.text,
+    });
+
+    res.json(forum);
+  } catch (err) {
+    console.error(er.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 Router.put('/comments/:id', auth, async (req, res) => {
-  const { comment } = req.body;
+  const { body, date } = req.body;
   const id = await User.findById(req.user.id);
 
   // Build comments object
 
-  const newcomment = { body: comment, user: id.name };
+  const newcomment = { text: body, name: id.name, date };
 
   try {
     let forum = await Forum.findById(req.params.id);
@@ -98,13 +124,16 @@ Router.put('/comments/:id', auth, async (req, res) => {
 
     forum = await Forum.findByIdAndUpdate(
       req.params.id,
-      { $push: { comments: newcomment } },
+      {
+        $push: { comments: { $each: [newcomment], $position: 0 } },
+        $inc: { commentstotal: 1 },
+      },
       { new: true }
     );
 
     res.json(forum);
   } catch (err) {
-    console.error(er.message);
+    console.error(err.message);
     res.status(500).send('Server Error');
   }
 });
